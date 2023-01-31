@@ -1,0 +1,4 @@
+// figure out virtual environment 
+// figure out packages and file to requirements file - package.json
+// figure out how to set up mongoDB database and mongoose 
+// figure out how to use express 
