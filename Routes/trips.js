@@ -2,6 +2,22 @@ const express = require('express');
 const app = express();
 const axios = require("axios");
 
+//cityObj = {city_name_here: 
+//{'coordinates': [lon, lat],  
+//'entertainment': { 'name1': 'address', 'name2': 'address', 'name3': 'address' },
+//'leisure': { 'name1': 'address', 'name2': 'address', 'name3': 'address' }, 
+//'restaurants': { 'name1': 'address', 'name2': 'address', 'name3': 'address' },
+//'tourism':{'name1':'address','name2':'address', 'name3':'address'},
+//'drinks_and_desserts': { 'name1': 'address', 'name2': 'address', 'name3': 'address' },
+//'nature': { 'name1': 'address', 'name2': 'address', 'name3': 'address' }
+//}, city_name_here{'entertainment': {'name1': 'address', 'name2': 'address', 'name3': 'address' },
+//'leisure': { 'name1': 'address', 'name2': 'address', 'name3': 'address' }, 
+//'restaurants': { 'name1': 'address', 'name2': 'address', 'name3': 'address' },
+//'tourism':{'name1':'address','name2':'address', 'name3':'address'},
+//'drinks_and_desserts': { 'name1': 'address', 'name2': 'address', 'name3': 'address' },
+//'nature': { 'name1': 'address', 'name2': 'address', 'name3': 'address' }
+//}
+
 //functions for API calls
 
 //get random 5 numbers
@@ -28,16 +44,16 @@ async function getCities() {
 
 
 //function to get place_id of cities
-async function getPlaceId() {
+async function getCoordinates() {
     let cityObj = {}
     fiveCities = await getCities()
     for (city in fiveCities) {
         let coordinates = await axios.get(`https://api.geoapify.com/v1/geocode/search?text=${fiveCities[city]}&lang=en&limit=1&type=city&apiKey=${process.env.API_KEY}`)
         //console.log(coordinates.data.features[0].properties.lon,coordinates.data.features[0].properties.lat)
-        cityObj[fiveCities[city]] = [{ "place_id": coordinates.data.features[0].properties.place_id }];
+        cityObj[fiveCities[city]] = { "coordinates": [coordinates.data.features[0].properties.lon, coordinates.data.features[0].properties.lat], "entertainment": {} };
 
     }
-    console.log(cityObj);
+    //console.log(cityObj);
     return cityObj;
 };
 
@@ -63,17 +79,21 @@ app.route('/cities').get((req, res) => {
 
 //get 5 countries and subcategories
 app.route('/cities/test').get(async (req, res) => {
-    let place = await getPlaceId()
-    for (let city in place) {
-        let preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${req.body.entertainment},${req.body.leisure}&filter=place:${place[city][0].place_id}&limit=3&apiKey=${process.env.API_KEY}`);
-        place[city]['entertainment'] = { "name": preferences.data.features[0] }
+    let place = await getCoordinates()
+    for (city in place) {
+        for (let i = 0; i < 3; i++) {
+            let preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${req.body.entertainment}&bias=proximity:${place[city]['coordinates'][0]},${place[city]['coordinates'][1]}&limit=3&apiKey=${process.env.API_KEY}`);
+            let results = preferences.data.features
+            place[city]['entertainment'][results[i].properties.name] = results[i].properties.address_line2;
+        };
+        //place[city]['entertainment'] += { "name2": results[1]['properties'].name, "address": results[1]['properties'].address_line2 };
+        //place[city]['entertainment'] += { "name3": results[2]['properties'].name, "address": results[2]['properties'].address_line2 };
         //coordinates[city]['name2'] = preferences.data.features[1].properties.name
-        console.log(preferences.data.features[0])
-
     }
-    //console.log(place)
-    //console.log(preferences.data.features)
+    //console.log(preferences.data.features[0].properties)
+    console.log(place)
 
+    //console.log(preferences.data.features
 });
 
 

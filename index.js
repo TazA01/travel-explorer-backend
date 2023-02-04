@@ -13,7 +13,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.use('/', cityRoutes);
-app.use('/cities',cityRoutes)
+app.use('/cities', cityRoutes);
+app.use('/cities/test', cityRoutes);
 
 
 
