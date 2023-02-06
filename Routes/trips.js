@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const axios = require("axios");
 
-//----------------------------------functions for API calls-------------------------------------------
+//-------------------------------------------FUNCTIONS-------------------------------------------//
 //get random 5 numbers
 const getFiveNumbers = ((arr) => {
     let fiveNumbers = [];
@@ -27,7 +27,7 @@ async function getFiveCities() {
 
 
 //function to get coordinates of cities
-async function getCoordinatesandCountry() {
+async function getCoordinates() {
     let cityObj = {}
     let fiveCities = await getFiveCities()
     for (city in fiveCities) {
@@ -39,100 +39,45 @@ async function getCoordinatesandCountry() {
             "country": coordinates.data.features[randomNum].properties.country,
             "region": coordinates.data.features[randomNum].properties.state ? coordinates.data.features[randomNum].properties.state : coordinates.data.features[randomNum].properties.municipality,
             "lon": coordinates.data.features[randomNum].properties.lon,
-            "lat": coordinates.data.features[randomNum].properties.lat,
-            //"coordinates": [coordinates.data.features[randomNum].properties.lon, coordinates.data.features[randomNum].properties.lat],
-            "entertainment": {},
-            "leisure": {},
-            "nature": {},
-            "tourism": {},
-            "food": {},
+            "lat": coordinates.data.features[randomNum].properties.lat
         };
 
     };
     return cityObj;
 };
 
-//----------------------------------------ROUTES-------------------------------------------------------
+
+const getAllData = async (body) => {
+    const places = await getCoordinates();
+    let userInput = Object.values(body);
+
+    for (city in places) {
+        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${places[city]['lon']},${places[city]['lat']},30000&bias=proximity:${places[city]['lon']},${places[city]['lat']}&limit=500&apiKey=${process.env.API_KEY}`);
+
+        for (let i = 0; i < preferences.data.features.length; i++) {
+            let searchResults = preferences.data.features;
+            if (searchResults == false) {
+                continue;
+            } else {
+                places[city][searchResults[i].properties.name] = { "address": searchResults[i].properties.address_line2, "category": searchResults[i].properties.categories[1] };
+            }
+
+        }
+
+    }
+    return places;
+}
+
+//----------------------------------------ROUTES-------------------------------------------------------//
 
 app.route('/').get((req, res) => { res.json({ message: "Hello from server!" }) })
 
-//get all cities
-app.route('/cities').get(async (req, res) => {
-    let place = await getCoordinatesandCountry();
-    res.send(place);
+
+app.route('/cities').post(async (req, res) => {
+    let searchRes = await getAllData(req.body);
+    res.send(searchRes);
 });
 
-//get entertainment places
-app.route('/cities/entertainment').get(async (req, res) => {
-    let place = await getCoordinatesandCountry();
-
-    for (let i = 0; i < 3; i++) {
-        for (city in place) {
-            let preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${req.body.entertainment}&filter=circle:${place[city]['lon']},${place[city]['lat']},200000&bias=proximity:${place[city]['lon']},${place[city]['lat']}&limit=3&apiKey=${process.env.API_KEY}`);
-            let results = preferences.data.features[i].properties;
-            place[city]['entertainment'][results.name] = results.address_line2;
-        };
-
-
-    };
-    res.send(place)
-
-});
-
-//get leisure places
-app.route('/cities/leisure').get(async (req, res) => {
-    let place = await getCoordinatesandCountry();
-    for (city in place) {
-        for (let i = 0; i < 3; i++) {
-            let preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${req.body.leisure}&filter=circle:${place[city]['lon']},${place[city]['lat']},50000&bias=proximity:${place[city]['lon']},${place[city]['lat']}&limit=3&apiKey=${process.env.API_KEY}`);
-            let results = preferences.data.features[i]
-            place[city]['leisure'][results.properties.name] = results.properties.address_line2;
-        };
-    };
-    res.send(place);
-
-});
-
-//get nature places
-app.route('/cities/nature').get(async (req, res) => {
-    let place = await getCoordinatesandCountry();
-    for (city in place) {
-        for (let i = 0; i < 3; i++) {
-            let preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${req.body.nature}&filter=circle:${place[city]['lon']},${place[city]['lat']},100000&bias=proximity:${place[city]['lon']},${place[city]['lat']}&limit=3&apiKey=${process.env.API_KEY}`);
-            let results = preferences.data.features[i]
-            place[city]['nature'][results.properties.name] = results.properties.address_line2;
-        };
-    };
-    res.send(place);
-});
-
-//get tourism places
-app.route('/cities/tourism').get(async (req, res) => {
-    let place = await getCoordinatesandCountry();
-    for (city in place) {
-        for (let i = 0; i < 3; i++) {
-            let preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${req.body.tourism}&filter=circle:${place[city]['lon']},${place[city]['lat']},50000&bias=proximity:${place[city]['lon']},${place[city]['lat']}&limit=3&apiKey=${process.env.API_KEY}`);
-            let results = preferences.data.features[i]
-            place[city]['tourism'][results.properties.name] = results.properties.address_line2;
-        };
-
-    };
-    res.send(place);
-
-});
-
-//get food places
-app.route('/cities/food').get(async (req, res) => {
-    let place = await getCoordinatesandCountry();
-    for (city in place) {
-        for (let i = 0; i < 3; i++) {
-            let preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${req.body.food}&filter=circle:${place[city]['lon']},${place[city]['lat']},50000&bias=proximity:${place[city]['lon']},${place[city]['lat']}&limit=3&apiKey=${process.env.API_KEY}`);
-            let results = preferences.data.features[i]
-            place[city]['food'][results.properties.name] = results.properties.address_line2;
-        };
-    };
-    res.send(place);
-});
 
 
 module.exports = app;

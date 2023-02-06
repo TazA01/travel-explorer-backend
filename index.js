@@ -13,12 +13,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.use('/', cityRoutes);
-app.use('/cities', cityRoutes);
-app.use('/cities/entertainment', cityRoutes);
-app.use('/cities/leisure', cityRoutes);
-app.use('/cities/tourism', cityRoutes);
-app.use('/cities/food', cityRoutes);
-app.use('/cities/nature', cityRoutes);
 
 
 
