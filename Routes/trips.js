@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const axios = require("axios");
+const City = require('../models/Cities');
 
 //-------------------------------------------FUNCTIONS-------------------------------------------//
 //get random 5 numbers
@@ -27,45 +28,68 @@ async function getFiveCities() {
 
 
 //function to get coordinates of cities
-async function getCoordinates() {
+// async function getCoordinates() {
+//     let cityObj = {}
+//     let fiveCities = await getFiveCities()
+//     for (city in fiveCities) {
+//         let coordinates = await axios.get(`https://api.geoapify.com/v1/geocode/search?text=${fiveCities[city]}&lang=en&limit=100&type=city&apiKey=${process.env.GEOAPIFY_API_KEY}`);
+//         min = Math.ceil(1);
+//         max = Math.floor(coordinates.data.features.length - 1);
+//         let randomNum = Math.floor(Math.random() * (max - min) + min);
+//         cityObj[fiveCities[city]] = {
+//             "country": coordinates.data.features[randomNum].properties.country,
+//             "region": coordinates.data.features[randomNum].properties.state ? coordinates.data.features[randomNum].properties.state : coordinates.data.features[randomNum].properties.municipality,
+//             "lon": coordinates.data.features[randomNum].properties.lon,
+//             "lat": coordinates.data.features[randomNum].properties.lat
+//         };
+
+//     };
+//     return cityObj;
+// };
+
+const getCoordinates = async () => {
     let cityObj = {}
     let fiveCities = await getFiveCities()
+    const timer = ms => new Promise(res => setTimeout(res, ms))
     for (city in fiveCities) {
-        let coordinates = await axios.get(`https://api.geoapify.com/v1/geocode/search?text=${fiveCities[city]}&lang=en&limit=100&type=city&apiKey=${process.env.API_KEY}`);
+        let coordinates = await axios.get(`https://us1.locationiq.com/v1/search?key=${process.env.LOCATIONIQ_API_KEY}&q=${fiveCities[city]}&format=json`);
         min = Math.ceil(1);
-        max = Math.floor(coordinates.data.features.length - 1);
+        max = Math.floor(coordinates.data.length - 1);
         let randomNum = Math.floor(Math.random() * (max - min) + min);
         cityObj[fiveCities[city]] = {
-            "country": coordinates.data.features[randomNum].properties.country,
-            "region": coordinates.data.features[randomNum].properties.state ? coordinates.data.features[randomNum].properties.state : coordinates.data.features[randomNum].properties.municipality,
-            "lon": coordinates.data.features[randomNum].properties.lon,
-            "lat": coordinates.data.features[randomNum].properties.lat
+            "lon": coordinates.data[randomNum].lon,
+            "lat": coordinates.data[randomNum].lat,
+            "name": coordinates.data[randomNum].display_name,
+            "places": {},
         };
+        await timer(400);
 
     };
     return cityObj;
-};
+
+}
 
 
 const getAllData = async (body) => {
-    const places = await getCoordinates();
+    const cities = await getCoordinates();
     let userInput = Object.values(body);
+    let preferences; 
 
-    for (city in places) {
-        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${places[city]['lon']},${places[city]['lat']},30000&bias=proximity:${places[city]['lon']},${places[city]['lat']}&limit=500&apiKey=${process.env.API_KEY}`);
+    for (city in cities) {
+        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},50000&bias=proximity:${cities[city]['lon']},${cities[city]['lat']}&limit=75&apiKey=${process.env.GEOAPIFY_API_KEY}`);
 
         for (let i = 0; i < preferences.data.features.length; i++) {
             let searchResults = preferences.data.features;
             if (searchResults == false) {
                 continue;
             } else {
-                places[city][searchResults[i].properties.name] = { "address": searchResults[i].properties.address_line2, "category": searchResults[i].properties.categories[1] };
+                cities[city].places[searchResults[i].properties.name] = { 'address': searchResults[i].properties.address_line2, "category": searchResults[i].properties.categories[1] };
             }
 
         }
 
     }
-    return places;
+    return cities;
 }
 
 //----------------------------------------ROUTES-------------------------------------------------------//
@@ -75,9 +99,22 @@ app.route('/').get((req, res) => { res.json({ message: "Hello from server!" }) }
 
 app.route('/cities').post(async (req, res) => {
     let searchRes = await getAllData(req.body);
-    res.send(searchRes);
+    res.status(200).send(searchRes);
+    //res.status(404).send("Oh uh, something went wrong");
+
 });
 
+
+//iterate through db and see if there is a saved city and country
+app.route('/cities/save').post((req, res) => {
+    let newCity = new City({ name: 'Paris', places: { 'cafe': 'outerbanks', 'restaurant': 'My home' } });
+    newCity.save();
+    res.send(newCity)
+});
+
+app.route('/cities/places/save').post((req, res) => {
+
+});
 
 
 module.exports = app;
