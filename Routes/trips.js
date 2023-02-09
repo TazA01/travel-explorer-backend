@@ -60,6 +60,7 @@ const getCoordinates = async () => {
             "lon": coordinates.data[randomNum].lon,
             "lat": coordinates.data[randomNum].lat,
             "name": coordinates.data[randomNum].display_name,
+            "country": coordinates.data[randomNum].display_name.split(" ").pop(),
             "places": {},
         };
         await timer(400);
@@ -73,10 +74,10 @@ const getCoordinates = async () => {
 const getAllData = async (body) => {
     const cities = await getCoordinates();
     let userInput = Object.values(body);
-    let preferences; 
+    let preferences;
 
     for (city in cities) {
-        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},50000&bias=proximity:${cities[city]['lon']},${cities[city]['lat']}&limit=75&apiKey=${process.env.GEOAPIFY_API_KEY}`);
+        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},80000&bias=proximity:${cities[city]['lon']},${cities[city]['lat']}&limit=100&apiKey=${process.env.GEOAPIFY_API_KEY}`);
 
         for (let i = 0; i < preferences.data.features.length; i++) {
             let searchResults = preferences.data.features;
@@ -87,21 +88,23 @@ const getAllData = async (body) => {
             }
 
         }
-
     }
     return cities;
 }
 
 //----------------------------------------ROUTES-------------------------------------------------------//
 
-app.route('/').get((req, res) => { res.json({ message: "Hello from server!" }) })
-
 
 app.route('/cities').post(async (req, res) => {
     let searchRes = await getAllData(req.body);
+    console.log(searchRes);
     res.status(200).send(searchRes);
     //res.status(404).send("Oh uh, something went wrong");
 
+});
+
+app.get('/cities', (req, res) => {
+    res.json({ message: "Hello from server!" });
 });
 
 

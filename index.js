@@ -8,6 +8,7 @@ const City = require('./models/Cities');
 dotenv.config();
 const cors = require("cors");
 app.use(cors());
+app.use(express.json());
 
 //Connecting to the database
 mongoose.set("strictQuery", false);
@@ -19,7 +20,7 @@ mongoose.connect(`${process.env.MONGO_URL}`).
     });
 
 //Here we are configuring express to use body-parser as middle-ware.
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 app.use('/', cityRoutes);
