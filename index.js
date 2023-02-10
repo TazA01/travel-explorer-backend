@@ -23,8 +23,8 @@ mongoose.connect(`${process.env.MONGO_URL}`).
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use('/', cityRoutes);
 
+app.use('/', cityRoutes);
 
 
 //listening to any incoming requests 

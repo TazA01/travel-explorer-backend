@@ -56,9 +56,8 @@ const getImages = async () => {
         let images;
         let imgResults;
 
-        images = await axios.get(`https://api.pexels.com/v1/search?query=country${cities[city].country}&page=2&per_page=5&orientation=square`);
-
-        imgResults = images.data.photos[0].src.medium;
+        images = await axios.get(`https://api.unsplash.com/search/photos?page=1&query=${cities[city].country}&client_id=${process.env.IMAGE_APIKEY}`);
+        imgResults = images.data.results[1].urls.small;
         cities[city].image = imgResults;
 
 
@@ -74,7 +73,7 @@ const getAllData = async (body) => {
 
 
     for (let city in cities) {
-        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},80000&bias=proximity:${cities[city]['lon']},${cities[city]['lat']}&limit=100&apiKey=${process.env.GEOAPIFY_API_KEY}`);
+        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},60000&limit=100&apiKey=${process.env.GEOAPIFY_API_KEY}`);
 
         for (let i = 0; i < preferences.data.features.length; i++) {
             let searchResults = preferences.data.features;
@@ -105,16 +104,27 @@ app.get('/', (req, res) => {
 });
 
 
-//iterate through db and see if there is a saved city and country
+//save city and places
 app.route('/cities/save').post((req, res) => {
-    let newCity = new City({ name: 'Paris', places: { 'cafe': 'outerbanks', 'restaurant': 'My home' } });
+
+    let newCity = new City({ "city": req.body.city, "country": req.body.country, "fullLocation": req.body.fullLocation, "image": req.body.image, "places": req.body.places });
+    console.log(newCity);
     newCity.save();
-    res.send(newCity)
+    res.send(newCity);
 });
 
-app.route('/cities/places/save').post((req, res) => {
+//get all saved cities
+app.get('/cities/save', async (req, res) => {
+    const getAllCities = await City.find({});
+    console.log(getAllCities);
+    //res.json({ saveMessage: "Hello from saved cities" });
+    res.send(getAllCities);
 
 });
+
+// app.route('/cities/places/save').post((req, res) => {
+
+// });
 
 
 module.exports = app;
