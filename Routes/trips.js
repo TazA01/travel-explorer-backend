@@ -26,32 +26,11 @@ async function getFiveCities() {
     return (getFiveNumbers(oneArr));
 }
 
-
-//function to get coordinates of cities
-// async function getCoordinates() {
-//     let cityObj = {}
-//     let fiveCities = await getFiveCities()
-//     for (city in fiveCities) {
-//         let coordinates = await axios.get(`https://api.geoapify.com/v1/geocode/search?text=${fiveCities[city]}&lang=en&limit=100&type=city&apiKey=${process.env.GEOAPIFY_API_KEY}`);
-//         min = Math.ceil(1);
-//         max = Math.floor(coordinates.data.features.length - 1);
-//         let randomNum = Math.floor(Math.random() * (max - min) + min);
-//         cityObj[fiveCities[city]] = {
-//             "country": coordinates.data.features[randomNum].properties.country,
-//             "region": coordinates.data.features[randomNum].properties.state ? coordinates.data.features[randomNum].properties.state : coordinates.data.features[randomNum].properties.municipality,
-//             "lon": coordinates.data.features[randomNum].properties.lon,
-//             "lat": coordinates.data.features[randomNum].properties.lat
-//         };
-
-//     };
-//     return cityObj;
-// };
-
 const getCoordinates = async () => {
     let cityObj = {}
     let fiveCities = await getFiveCities()
     const timer = ms => new Promise(res => setTimeout(res, ms))
-    for (city in fiveCities) {
+    for (let city in fiveCities) {
         let coordinates = await axios.get(`https://us1.locationiq.com/v1/search?key=${process.env.LOCATIONIQ_API_KEY}&q=${fiveCities[city]}&format=json`);
         min = Math.ceil(1);
         max = Math.floor(coordinates.data.length - 1);
@@ -60,12 +39,13 @@ const getCoordinates = async () => {
             "lon": coordinates.data[randomNum].lon,
             "lat": coordinates.data[randomNum].lat,
             "name": coordinates.data[randomNum].display_name,
-            "country": coordinates.data[randomNum].display_name.split(" ").pop(),
+            "country": coordinates.data[randomNum].display_name.split(",").pop(),
             "places": {},
         };
-        await timer(400);
 
+        await timer(400);
     };
+
     return cityObj;
 
 }
@@ -75,8 +55,10 @@ const getAllData = async (body) => {
     const cities = await getCoordinates();
     let userInput = Object.values(body);
     let preferences;
+    let images;
+    let imgResults;
 
-    for (city in cities) {
+    for (let city in cities) {
         preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},80000&bias=proximity:${cities[city]['lon']},${cities[city]['lat']}&limit=100&apiKey=${process.env.GEOAPIFY_API_KEY}`);
 
         for (let i = 0; i < preferences.data.features.length; i++) {
@@ -86,8 +68,12 @@ const getAllData = async (body) => {
             } else {
                 cities[city].places[searchResults[i].properties.name] = { 'address': searchResults[i].properties.address_line2, "category": searchResults[i].properties.categories[1] };
             }
-
         }
+
+        images = await axios.get(`https://api.pexels.com/v1/search?query=${cities[city].country}&page=1&per_page=1&orientation=square`);
+        imgResults = images.data.photos[0].src.medium;
+        cities[city].image = imgResults;
+
     }
     return cities;
 }
@@ -103,7 +89,7 @@ app.route('/cities').post(async (req, res) => {
 
 });
 
-app.get('/cities', (req, res) => {
+app.get('/', (req, res) => {
     res.json({ message: "Hello from server!" });
 });
 
