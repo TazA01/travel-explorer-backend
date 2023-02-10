@@ -50,29 +50,40 @@ const getCoordinates = async () => {
 
 }
 
+const getImages = async () => {
+    const cities = await getCoordinates();
+    for (let city in cities) {
+        let images;
+        let imgResults;
+
+        images = await axios.get(`https://api.pexels.com/v1/search?query=country${cities[city].country}&page=2&per_page=5&orientation=square`);
+
+        imgResults = images.data.photos[0].src.medium;
+        cities[city].image = imgResults;
+
+
+    }
+    return cities;
+}
+
 
 const getAllData = async (body) => {
-    const cities = await getCoordinates();
+    const cities = await getImages();
     let userInput = Object.values(body);
     let preferences;
-    let images;
-    let imgResults;
+
 
     for (let city in cities) {
         preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},80000&bias=proximity:${cities[city]['lon']},${cities[city]['lat']}&limit=100&apiKey=${process.env.GEOAPIFY_API_KEY}`);
 
         for (let i = 0; i < preferences.data.features.length; i++) {
             let searchResults = preferences.data.features;
-            if (searchResults == false) {
+            if (searchResults == false || searchResults[i].properties.name == 'undefined' || !searchResults[i].properties.address_line2 || !searchResults[i].properties.name) {
                 continue;
             } else {
                 cities[city].places[searchResults[i].properties.name] = { 'address': searchResults[i].properties.address_line2, "category": searchResults[i].properties.categories[1] };
             }
         }
-
-        images = await axios.get(`https://api.pexels.com/v1/search?query=${cities[city].country}&page=1&per_page=1&orientation=square`);
-        imgResults = images.data.photos[0].src.medium;
-        cities[city].image = imgResults;
 
     }
     return cities;
