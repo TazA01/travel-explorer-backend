@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const axios = require("axios");
 const City = require('../models/Cities');
+const mongoose = require('mongoose');
 
 //-------------------------------------------FUNCTIONS-------------------------------------------//
 //get random 5 numbers
@@ -121,6 +122,13 @@ app.get('/cities/save', async (req, res) => {
     res.send(getAllCities);
 
 });
+
+//delete all cities in database 
+app.delete('/cities/save', async (req, res) => {
+    const getAllCities = await City.find({});
+    getAllCities.remove({})
+    res.send("deleted")
+})
 
 // app.route('/cities/places/save').post((req, res) => {
 

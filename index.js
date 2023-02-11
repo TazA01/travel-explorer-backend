@@ -13,7 +13,10 @@ app.use(express.json());
 //Connecting to the database
 mongoose.set("strictQuery", false);
 mongoose.connect(`${process.env.MONGO_URL}`).
-    then(() => console.log('DB Connection Open'))
+    then(() => {
+        //mongoose.connection.db.dropDatabase();
+        console.log('DB Connection Open')
+    })
     .catch(error => {
         console.log(error)
         return error
