@@ -45,7 +45,7 @@ const getCoordinates = async () => {
             "places": {},
         };
 
-        await timer(1000);
+        await timer(350);
     };
 
     return cityObj;
@@ -61,8 +61,6 @@ const getImages = async () => {
         images = await axios.get(`https://api.unsplash.com/search/photos?page=1&query=${cities[city].country}&client_id=${process.env.IMAGE_APIKEY}`);
         imgResults = images.data.results[1].urls.small;
         cities[city].image = imgResults;
-        console.log(imgResults);
-
 
     }
     return cities;
@@ -76,7 +74,7 @@ const getAllData = async (body) => {
 
 
     for (let city in cities) {
-        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},60000&limit=30&apiKey=${process.env.GEOAPIFY_API_KEY}`);
+        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},50000&limit=20&apiKey=${process.env.GEOAPIFY_API_KEY}`);
 
         for (let i = 0; i < preferences.data.features.length; i++) {
             let searchResults = preferences.data.features;
@@ -96,9 +94,7 @@ const getAllData = async (body) => {
 
 app.route('/cities').post(async (req, res) => {
     let searchRes = await getAllData(req.body);
-    //console.log(searchRes);
     res.status(200).send(searchRes);
-    //res.status(404).send("Oh uh, something went wrong");
 
 });
 
@@ -111,17 +107,13 @@ app.get('/', (req, res) => {
 app.route('/cities/save').post((req, res) => {
 
     let newCity = new City({ "city": req.body.city, "country": req.body.country, "fullLocation": req.body.fullLocation, "image": req.body.image, "places": req.body.places });
-    //console.log(newCity);
     newCity.save();
     res.send(newCity);
-    console.log(req.body)
 });
 
 //get all saved cities
 app.get('/cities/save', async (req, res) => {
     const getAllCities = await City.find({});
-    //console.log(getAllCities);
-    //res.json({ saveMessage: "Hello from saved cities" });
     res.send(getAllCities);
 
 });
