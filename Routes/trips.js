@@ -45,7 +45,7 @@ const getCoordinates = async () => {
             "places": {},
         };
 
-        await timer(600);
+        await timer(500);
     };
 
     return cityObj;
