@@ -1,10 +1,8 @@
 const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
-// const bodyParser = require("body-parser");
 const cityRoutes = require('./routes/trips');
 const mongoose = require('mongoose');
-const City = require('./models/Cities');
 dotenv.config();
 const cors = require("cors");
 

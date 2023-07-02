@@ -2,19 +2,12 @@ const express = require('express');
 const app = express();
 const axios = require("axios");
 const City = require('../models/Cities');
-const mongoose = require('mongoose');
-
 
 //-------------------------------------------FUNCTIONS-------------------------------------------//
-//get random 5 numbers
-const getFiveNumbers = ((arr) => {
-    let fiveNumbers = [];
-    for (let city = 0; city < 5; city++) {
-        let cityNum = Math.floor(Math.random() * arr.length);
-        fiveNumbers.push(arr[cityNum]);
-    }
-    return fiveNumbers;
-})
+const getFiveNumbers = (arr) => {
+    const shuffled = arr.slice().sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, 5);
+};
 
 //get an array with 5 cities
 async function getFiveCities() {
@@ -47,7 +40,6 @@ const getCoordinates = async () => {
 
         await timer(350);
     };
-
     return cityObj;
 
 }
@@ -59,7 +51,7 @@ const getImages = async () => {
         let imgResults;
 
         images = await axios.get(`https://api.unsplash.com/search/photos?page=1&query=${cities[city].country}&client_id=${process.env.IMAGE_APIKEY}`);
-        imgResults = images.data.results[1].urls.small;
+        imgResults = images.data.results[2].urls.small;
         cities[city].image = imgResults;
 
     }
@@ -74,7 +66,7 @@ const getAllData = async (body) => {
 
 
     for (let city in cities) {
-        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},50000&limit=20&apiKey=${process.env.GEOAPIFY_API_KEY}`);
+        preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},50000&limit=15&apiKey=${process.env.GEOAPIFY_API_KEY}`);
 
         for (let i = 0; i < preferences.data.features.length; i++) {
             let searchResults = preferences.data.features;
