@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const express = require("express");
 
 const citySchema = new mongoose.Schema({
     city: String,

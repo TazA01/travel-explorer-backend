@@ -11,38 +11,51 @@ const getFiveNumbers = (arr) => {
 
 //get an array with 5 cities
 async function getFiveCities() {
-    let cityArr = [];
+    let citiesArr = [];
     const result = await axios.get('https://countriesnow.space/api/v0.1/countries');
     const data = result.data.data;
-    for (let i = 0; i < data.length; i++) {
-        cityArr.push(data[i]['cities'])
+    //console.log(data);
+
+    for (let i = 0; i < 5; i++) {
+        let randomCountry = Math.floor(Math.random() * data.length);
+        let randomCity = Math.floor(Math.random() * data[randomCountry].cities.length);
+        citiesArr.push([data[randomCountry]['cities'][randomCity], data[randomCountry]['country']])
+
     }
-    let oneArr = cityArr.flat();
-    return (getFiveNumbers(oneArr));
+    //console.log(citiesArr);
+    return citiesArr;
+    // return (getFiveNumbers(oneArr));
 }
+//console.log(getFiveCities())
 
 const getCoordinates = async () => {
     let cityObj = {}
     let fiveCities = await getFiveCities()
     const timer = ms => new Promise(res => setTimeout(res, ms))
+    //console.log('cities',fiveCities)
     for (let city in fiveCities) {
-        let coordinates = await axios.get(`https://us1.locationiq.com/v1/search?key=${process.env.LOCATIONIQ_API_KEY}&q=${fiveCities[city]}&format=json`);
-        min = Math.ceil(1);
-        max = Math.floor(coordinates.data.length - 1);
-        let randomNum = Math.floor(Math.random() * (max - min) + min);
-        cityObj[fiveCities[city]] = {
-            "lon": coordinates.data[randomNum].lon,
-            "lat": coordinates.data[randomNum].lat,
-            "name": coordinates.data[randomNum].display_name,
-            "country": coordinates.data[randomNum].display_name.split(",").pop(),
+        // let KEY = 'pk.10b4fc53dea807481060cefff7cc2ba4';
+        let coordinates = await axios.get(`https://us1.locationiq.com/v1/search?key=${process.env.LOCATIONIQ_API_KEY}&q=${fiveCities[city][0]}%2C%20${fiveCities[city][1]}&format=json`);
+        //console.log(coordinates.data);
+        // min = Math.ceil(1);
+        // max = Math.floor(coordinates.data.length - 1);
+        // let randomNum = Math.floor(Math.random() * (max - min) + min);
+        cityObj[fiveCities[city][0]] = {
+            "lon": coordinates.data[0].lon,
+            "lat": coordinates.data[0].lat,
+            "name": coordinates.data[0].display_name,
+            "country": fiveCities[city][1],
             "places": {},
-        };
-
+        }
         await timer(350);
     };
-    return cityObj;
 
-}
+
+    //console.log(cityObj);
+    return cityObj;
+};
+
+//console.log(getCoordinates())
 
 const getImages = async () => {
     const cities = await getCoordinates();
@@ -61,9 +74,9 @@ const getImages = async () => {
 
 const getAllData = async (body) => {
     const cities = await getImages();
+    //console.log(cities);
     let userInput = Object.values(body);
     let preferences;
-
 
     for (let city in cities) {
         preferences = await axios.get(`https://api.geoapify.com/v2/places?categories=${userInput[0]},${userInput[1]},${userInput[2]},${userInput[3]},${userInput[4]}&filter=circle:${cities[city]['lon']},${cities[city]['lat']},50000&limit=15&apiKey=${process.env.GEOAPIFY_API_KEY}`);
@@ -78,8 +91,10 @@ const getAllData = async (body) => {
         }
 
     }
+    //console.log(cities);
     return cities;
 }
+//console.log(getAllData())
 
 //----------------------------------------ROUTES-------------------------------------------------------//
 
