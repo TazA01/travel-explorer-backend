@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
 const cityRoutes = require('./routes/trips');
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 dotenv.config();
 const cors = require("cors");
 
@@ -13,18 +13,12 @@ app.use(cors());
 mongoose.set("strictQuery", false);
 mongoose.connect(`${process.env.MONGO_URL}`).
     then(() => {
-        //mongoose.connection.db.dropDatabase();
-        console.log('DB Connection Open')
+        console.log("DB Connection Open")
     })
     .catch(error => {
         console.log(error)
         return error
     });
-
-//Here we are configuring express to use body-parser as middle-ware.
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(bodyParser.json());
-
 
 app.use('/', cityRoutes);
 

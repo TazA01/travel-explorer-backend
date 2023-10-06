@@ -76,7 +76,6 @@ const getAllData = async (body) => {
         }
 
     }
-    console.log(cities);
     return cities;
 }
 
