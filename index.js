@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
-const cityRoutes = require("./routes/trips");
+const cityRoutes = require("./Routes/trips");  
 const mongoose = require("mongoose");
 dotenv.config();
 const cors = require("cors");
