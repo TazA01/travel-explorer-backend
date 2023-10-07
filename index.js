@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
-const cityRoutes = require("./Routes/trips");  
+const cityRoutes = require("./Routes/trips");
 const mongoose = require("mongoose");
 dotenv.config();
 const cors = require("cors");
@@ -11,12 +11,13 @@ app.use(cors());
 
 //Connecting to the database
 mongoose.set("strictQuery", false);
-mongoose.connect(`${process.env.MONGO_URL}`).
+
+mongoose.connect(`${process.env.MONGO}`).
     then(() => {
         console.log("DB Connection Open")
     })
     .catch(error => {
-        console.log(error)
+        console.log(error.message)
         return error
     });
 
