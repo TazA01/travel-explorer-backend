@@ -1,4 +1,6 @@
-<h1>Travel Explorer </h1>
+<h1>DEPLOYED WEB APP: https://travelexplorer.onrender.com</h1>
+
+<h2>Travel Explorer </h2>
 Travel Explorer is a capstone project for Ada Developers Academy. It's backend technologies include: Node,js, Express, Mongoose, and MongoDB. The database
 is used to store a user's saved cities along with information about the city, such as the full location name, an image, and the places within that city generated 
 by the API. The APIs used for this project are: GeoApify, LocationIQ, and Unsplash. 
@@ -21,5 +23,4 @@ by the API. The APIs used for this project are: GeoApify, LocationIQ, and Unspla
 <div>DELETE</div>
 <div>'/cities/delete/:id' </div>
 
-DEPLOYED WEB APP: https://travelexplorer.onrender.com/
 
