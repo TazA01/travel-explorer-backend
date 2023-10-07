@@ -21,3 +21,5 @@ by the API. The APIs used for this project are: GeoApify, LocationIQ, and Unspla
 <div>DELETE</div>
 <div>'/cities/delete/:id' </div>
 
+DEPLOYED WEB APP: https://travelexplorer.onrender.com/
+
